@@ -32,7 +32,6 @@ namespace BackgroundWorker
             else
             {
                 bgw.CancelAsync();
-                _downloader.Aborted = true;
             }
         }
 
@@ -44,7 +43,7 @@ namespace BackgroundWorker
         private void bgw_DoWork(object sender, DoWorkEventArgs e)
         {
             _downloader.GenerateFakeDownloadInformation();
-            _downloader.DownloadFile(bgw.ReportProgress);
+            e.Result = _downloader.DownloadFile(bgw.ReportProgress, CheckCancellation);
         }
 
         private void bgw_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -58,7 +57,7 @@ namespace BackgroundWorker
 
         private void bgw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (_downloader.Aborted)
+            if (!(bool)e.Result)
             {
                 lblStatus.ForeColor = Color.DarkRed;
                 lblStatus.Text = "Download aborted.";
@@ -74,5 +73,11 @@ namespace BackgroundWorker
             cmdStart.Text = "Download";
         }
 
+        /// <summary>
+        /// Checks whether worker cancellation is pending.
+        /// </summary>
+        /// <returns>True, if work should be cancelled; otherwise false.</returns>
+        private bool CheckCancellation()
+            => bgw.CancellationPending;
     }
 }

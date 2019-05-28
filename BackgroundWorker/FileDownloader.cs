@@ -27,7 +27,7 @@ namespace BackgroundWorker
         /// <summary>
         /// Factor for maximal download speed.
         /// </summary>
-        private const int MAX_DL_SPEED_FACTOR = 20;
+        private const int MAX_DL_SPEED_FACTOR = 15;
 
         #endregion
 
@@ -57,11 +57,6 @@ namespace BackgroundWorker
         /// </summary>
         public bool Downloading { get; private set; }
 
-        /// <summary>
-        /// Indicates whether current file download has been aborted by user.
-        /// </summary>
-        public bool Aborted { get; set; }
-
         #endregion
 
         /// <summary>
@@ -71,7 +66,6 @@ namespace BackgroundWorker
         {
             Random r = new Random(Environment.TickCount);
 
-            Aborted = false;
             Downloaded = 0;
             FileSize = r.Next(MIN_FILE_SIZE, MAX_FILE_SIZE);
 
@@ -82,11 +76,13 @@ namespace BackgroundWorker
         /// Simulates file download.
         /// </summary>
         /// <param name="reportProgress">Delegate to progress report method.</param>
-        public void DownloadFile(Action<int> reportProgress)
+        /// <param name="cancellationPending">Delegate to check whether download cancellation is pending.</param>
+        /// <returns>True, if download was completed successfully; otherwise false.</returns>
+        public bool DownloadFile(Action<int> reportProgress, Func<bool> cancellationPending)
         {
             Downloading = true;
 
-            while (Downloaded < FileSize && !Aborted)
+            while (Downloaded < FileSize && !cancellationPending.Invoke())
             {
                 Thread.Sleep(100);
 
@@ -96,6 +92,8 @@ namespace BackgroundWorker
             }
 
             Downloading = false;
+
+            return (Downloaded == FileSize);
         }
     }
 }
