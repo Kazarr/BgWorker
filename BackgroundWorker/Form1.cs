@@ -4,22 +4,46 @@ using System.Windows.Forms;
 
 namespace BackgroundWorker
 {
-    public partial class Form1 : Form
+    public partial class frmMain : Form
     {
 
+        /// <summary>
+        /// File download simulator.
+        /// </summary>
         FileDownloader _downloader;
 
-        public Form1()
+        public frmMain()
         {
             InitializeComponent();
-            cmdStart.Tag = false;
 
             _downloader = new FileDownloader();
         }
 
+        private void cmdStart_Click(object sender, System.EventArgs e)
+        {
+            if (!_downloader.Downloading)
+            {
+                cmdStart.Text = "Cancel";
+                lblStatus.Text = string.Empty;
+                progress.Value = 0;
+
+                bgw.RunWorkerAsync();
+            }
+            else
+            {
+                bgw.CancelAsync();
+                _downloader.Aborted = true;
+            }
+        }
+
+        private void cmdClose_Click(object sender, System.EventArgs e)
+        {
+            Close();
+        }
+
         private void bgw_DoWork(object sender, DoWorkEventArgs e)
         {
-            _downloader.GenerateRandomFile();
+            _downloader.GenerateFakeDownloadInformation();
             _downloader.DownloadFile(bgw.ReportProgress);
         }
 
@@ -48,40 +72,7 @@ namespace BackgroundWorker
             }
 
             cmdStart.Text = "Download";
-            cmdStart.Tag = false;
         }
 
-        private void cmdStart_Click(object sender, System.EventArgs e)
-        {
-            if (!(bool)cmdStart.Tag)
-            {
-                cmdStart.Tag = true;
-                cmdStart.Text = "Cancel";
-                lblStatus.Text = string.Empty;
-                progress.Value = 0;
-
-                bgw.RunWorkerAsync();
-            }
-            else
-            {
-                bgw.CancelAsync();
-                _downloader.Aborted = true;
-            }
-        }
-
-        private void label2_Click(object sender, System.EventArgs e)
-        {
-            Close();
-        }
-
-        private void label2_MouseEnter(object sender, System.EventArgs e)
-        {
-            lblClose.BackColor = Color.LightGray;
-        }
-
-        private void label2_MouseLeave(object sender, System.EventArgs e)
-        {
-            lblClose.BackColor = Color.Transparent;
-        }
     }
 }
